@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import List
 
 
 class LinearRegression():
@@ -7,6 +8,7 @@ class LinearRegression():
         self.w = None
         self.num_samples = None
         self.num_params = None
+        self.losses = None
 
     def fit(self, X, y, epochs=50, lr=0.000001, batch_size=1):
 
@@ -26,11 +28,13 @@ class LinearRegression():
     def predict_without_expansion(self, X):
         return np.dot(X, self.w)
 
-    def train(self, X, y, epochs, lr, batch_size):
+    def train(self, X, y, epochs, lr, batch_size) -> List[float]:
         """
         By default it is sort of stochastic gradient descent, but you can change it to batch gradient descent by setting batch_size to the number of samples
         mini-batch gradient descent by setting batch_size to a number less than the number of samples
         """
+        
+        loss_history = []
         X_new = np.concatenate([X, np.ones((X.shape[0], 1))], axis=1)
         if batch_size > self.num_samples:
             raise Exception(
@@ -51,7 +55,9 @@ class LinearRegression():
                 gradient = np.dot(X_batch.T, error)
                 self.w += lr * gradient
 
+            loss_history.append(np.mean(errors**2))
             print(f"Epoch: {epoch}, Loss: {np.mean(errors**2)}")
+        self.losses = loss_history
 
 
 if __name__ == "__main__":
