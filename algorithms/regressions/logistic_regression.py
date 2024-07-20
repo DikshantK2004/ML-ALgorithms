@@ -10,11 +10,11 @@ class LogisticRegression():
         self.lr_start = 0.01
         self.lr_end = 0.0000001
     
-    def fit(self, X, y, epochs=50,  batch_size=1):
+    def fit(self, X, y, epochs=50,  batch_size=1, constant_lr = False, lr = 0.01):
         self.num_samples = X.shape[0]
         self.num_params = X.shape[1] + 1
         self.w = np.random.random(self.num_params)
-        self.train(X, y, epochs, batch_size)
+        self.train(X, y, epochs, batch_size, constant_lr, lr)
     
     def predict(self, X):
         try:
@@ -30,7 +30,7 @@ class LogisticRegression():
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
     
-    def train(self, X, y, epochs,  batch_size) :
+    def train(self, X, y, epochs,  batch_size,constant_lr, lr_given) :
         """
         By default it is sort of stochastic gradient descent, but you can change it to batch gradient descent by setting batch_size to the number of samples
         mini-batch gradient descent by setting batch_size to a number less than the number of samples
@@ -44,6 +44,8 @@ class LogisticRegression():
                 "Batch size must be less than the number of samples")
         for epoch in range(epochs):
             lr = self.lr_start - (self.lr_start - self.lr_end) * epoch / epochs
+            if constant_lr:
+                lr = lr_given
             h_values = np.array([])
             for i in range(0, self.num_samples, batch_size):
                 if i + batch_size > self.num_samples:
