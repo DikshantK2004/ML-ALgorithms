@@ -7,12 +7,14 @@ class LogisticRegression():
         self.num_samples = None
         self.num_params = None
         self.losses = None
+        self.lr_start = 0.01
+        self.lr_end = 0.0000001
     
-    def fit(self, X, y, epochs=50, lr=0.000001, batch_size=1):
+    def fit(self, X, y, epochs=50,  batch_size=1):
         self.num_samples = X.shape[0]
         self.num_params = X.shape[1] + 1
         self.w = np.random.random(self.num_params)
-        self.train(X, y, epochs, lr, batch_size)
+        self.train(X, y, epochs, batch_size)
     
     def predict(self, X):
         try:
@@ -28,7 +30,7 @@ class LogisticRegression():
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
     
-    def train(self, X, y, epochs, lr, batch_size) :
+    def train(self, X, y, epochs,  batch_size) :
         """
         By default it is sort of stochastic gradient descent, but you can change it to batch gradient descent by setting batch_size to the number of samples
         mini-batch gradient descent by setting batch_size to a number less than the number of samples
@@ -41,6 +43,7 @@ class LogisticRegression():
             raise Exception(
                 "Batch size must be less than the number of samples")
         for epoch in range(epochs):
+            lr = self.lr_start - (self.lr_start - self.lr_end) * epoch / epochs
             h_values = np.array([])
             for i in range(0, self.num_samples, batch_size):
                 if i + batch_size > self.num_samples:
@@ -51,13 +54,12 @@ class LogisticRegression():
                     y_batch = y[i:i+batch_size]
                 
                 y_pred = self.predict_without_expansion(X_batch)
+                y_pred = np.clip(y_pred, 1e-10, 1-1e-10)
                 error = y_batch - y_pred
                 
                 h_values = np.concatenate([h_values, y_pred], axis=None)
-                
                 gradient = np.dot(X_batch.T, error)
                 self.w += lr * gradient
-            
             loss = -np.sum(y * np.log(h_values) + (1 - y) * np.log(1 - h_values))
             loss_history = np.concatenate([loss_history, loss], axis=None)
             print(f"Epoch: {epoch}, Loss: {loss}")
