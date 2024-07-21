@@ -43,6 +43,8 @@ class SoftmaxRegression():
     
     def train(self, X, y, epochs, batch_size, constant_lr, lr):
         self.losses = []
+        X_new = np.concatenate([X, np.ones((X.shape[0], 1))], axis=1)
+        
         Y_one_hot = np.zeros((self.num_samples, self.num_classes))
         Y_one_hot[np.arange(self.num_samples), y] = 1
         for epoch in range(epochs):
@@ -54,7 +56,7 @@ class SoftmaxRegression():
             for i in range(0, self.num_samples, batch_size):
                 if i + batch_size > self.num_samples:
                     batch_size = self.num_samples - i
-                X_batch = X[i:i+batch_size]
+                X_batch = X_new[i:i+batch_size]
                 y_batch = Y_one_hot[i:i+batch_size]
                 cur_loss = self.update(X_batch, y_batch)
                 losses_in_epoch = np.append(losses_in_epoch, cur_loss)
@@ -62,22 +64,23 @@ class SoftmaxRegression():
             
             print(f"Epoch {epoch+1}/{epochs} => Loss: {self.losses[-1]}")            
     
-    def update(self, X, y, lr):
-        y_pred = self.predict(X) # shape: (batch_size, num_classes)
+    def update(self, X, y):
+        y_pred = self.predict_without_expansion(X) # shape: (batch_size, num_classes)
         # shape of y: (batch_size, num_classes)
         y_pred = np.clip(y_pred, 1e-10, 1-1e-10)
         error = y_pred- y # shape: (batch_size, num_classes)
         
         # shape of X: (batch_size, num_params)
         grads = X.T @ error # shape: (num_params, num_classes) which means one column for each class, shape of w
-        
+        # print(self.w.shape, grads.shape)
         self.w -= self.lr * grads
         # compute loss
         loss = -np.sum(y * np.log(y_pred)) 
+    
         return loss
         
     def cross_entropy_loss(self, X, y):
-        y_pred = self.predict(X)
+        y_pred = self.predict_without_expansion(X)
         y_pred = np.clip(y_pred, 1e-10, 1-1e-10)
         Y_one_hot = np.zeros((self.num_samples, self.num_classes))
         Y_one_hot[np.arange(self.num_samples), y] = 1
@@ -92,5 +95,10 @@ if __name__=="__main__":
     from sklearn.datasets import load_iris
     
     iris = load_iris()
+    X = iris.data
+    y = iris.target
+    
+    model = SoftmaxRegression()
+    model.fit(X, y, 3, epochs=50000, batch_size=X.shape[0]//10)
     
     
