@@ -1,6 +1,5 @@
 import numpy as np
-from activations import sigmoid, relu, sigmoid_derivative, relu_derivative
-from pydantic import BaseModel
+from .activations import sigmoid, relu, sigmoid_derivative, relu_derivative
 class Dense:
     def __init__(self, input_size, output_size, activation = None):
         self.input_size =  input_size
