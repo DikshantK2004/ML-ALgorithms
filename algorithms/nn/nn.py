@@ -10,7 +10,7 @@ class Sequential:
         self.loss_derivative = None
         self.output = None
         self.input = None
-        self.lr_max = 0.1
+        self.lr_max = 0.99
         self.lr_min = 0.00000001
     
     def forward(self, input):
@@ -26,6 +26,10 @@ class Sequential:
         for layer in reversed(self.layers):
             output_grad = layer.backward(output_grad, lr)
         return output_grad
+    
+    def predict(self, X):
+        return self.forward(X)
+    
     
     def fit(self, X, y, epochs, loss,  batch_size = 2):
         
@@ -60,7 +64,16 @@ class Sequential:
             loss_history.append(loss)
             
         return loss_history
-            
+    
+    def __str__(self):
+        return ' -> '.join([str(layer) for layer in self.layers])
+    
+    def __repr__(self):
+        return self.__str__()
+    
+    def reset_weights(self):
+        for layer in self.layers:
+            layer.reset()
 if __name__=="__main__":
     from layers import *
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])

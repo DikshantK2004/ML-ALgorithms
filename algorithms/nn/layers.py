@@ -45,6 +45,12 @@ class Dense:
     def __str__(self):
         return f'Layer({self.input_size}, {self.output_size}, {self.activation})'
     
+    def reset(self):
+        self.weights = np.random.randn(self.input_size, self.output_size)
+        self.biases = np.random.randn(self.output_size)
+        self.input = None
+        self.output = None
+    
         
         
         
