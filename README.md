@@ -4,3 +4,17 @@ This repository contains the implementation of various machine learning algorith
 
 Notes:
 - The test folder is actually implementation and visualization of the algorithms.
+
+
+# Resources:-
+
+- [Loss Computation](https://stats.stackexchange.com/questions/436154/is-it-better-to-accumulate-accuracy-and-loss-during-an-epoch-or-recompute-all-of)
+- **Books**:- 
+  -  [Stanford CS229 Notes](https://cs229.stanford.edu/main_notes.pdf)
+
+- **Regression Algorithms**:-
+  - [Softmax Regression](http://deeplearning.stanford.edu/tutorial/supervised/SoftmaxRegression/)
+
+- **Neural Networks**:- 
+  - [Neural Networks notebook](https://cs229.stanford.edu/main_notes.pdf)
+  - [3Blue1Brown Neural Networks](http://deeplearning.stanford.edu/tutorial/supervised/SoftmaxRegression/)
