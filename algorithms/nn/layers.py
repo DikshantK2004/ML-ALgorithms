@@ -1,6 +1,9 @@
 import numpy as np
-from .activations import sigmoid, relu, sigmoid_derivative, relu_derivative
+from .activations import sigmoid, relu, sigmoid_derivative, relu_derivative, softmax, softmax_derivative
 from scipy import signal, fft
+
+
+# accepts as batches only, so from flatten send (1, something)
 class Dense:
     def __init__(self, input_size, output_size, activation = None):
         self.input_size =  input_size
@@ -109,7 +112,10 @@ class Flatten:
     
     def forward(self, input):
         self.input = input
-        self.output = input.reshape(input.shape[0], -1)
+        prod = 1
+        for i in input.shape[:]:
+            prod *= i
+        self.output = input.reshape(1, prod)
         return self.output
     
     def backward(self, output_grad, lr):
@@ -126,7 +132,6 @@ class Flatten:
         self.output = None
         
 
-import numpy as np
 
 class Conv2D:
     def __init__(self, n_channels, num_filter, kernel_size=(3, 3), stride=1, padding=0):
@@ -285,3 +290,26 @@ class MaxPool:
 
     def __str__(self):
         return f'MaxPool(pool_size={self.pool_size}, stride={self.stride}, padding={self.padding})'
+
+class SoftMax:
+    def __init__(self):
+        self.input = None
+        self.output = None
+
+    def forward(self, input):
+        self.input = input
+        self.output = softmax(input)
+        return self.output
+
+    def backward(self, output_grad, lr):
+        return output_grad * softmax_derivative(self.input)
+    
+    def reset(self):
+        self.input = None
+        self.output = None
+
+    def __repr__(self):
+        return 'SoftMax'
+
+    def __str__(self):
+        return 'SoftMax'

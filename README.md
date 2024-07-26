@@ -18,3 +18,12 @@ Notes:
 - **Neural Networks**:- 
   - [Neural Networks notebook](https://cs229.stanford.edu/main_notes.pdf)
   - [3Blue1Brown Neural Networks](http://deeplearning.stanford.edu/tutorial/supervised/SoftmaxRegression/)
+  - [MIT NOtes] (http://introtodeeplearning.com/slides/6S191_MIT_DeepLearning_L1.pdf)
+
+- **CNNs**:-
+  - [MIT Notes](http://introtodeeplearning.com/slides/6S191_MIT_DeepLearning_L3.pdf): also contain info on difference between classifying and segmentation models.
+  - [CNN Maths](https://towardsdatascience.com/convolutional-neural-networks-explained-9cc5188c4939)
+  - [BackPropogation in maxpooling](https://www.educative.io/answers/how-to-backpropagate-through-max-pooling-layers)
+
+- **RNNs**:-
+  - [MIT Notes](http://introtodeeplearning.com/slides/6S191_MIT_DeepLearning_L2.pdf)
