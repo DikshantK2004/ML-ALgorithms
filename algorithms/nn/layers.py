@@ -1,7 +1,7 @@
 import numpy as np
 from .activations import sigmoid, relu, sigmoid_derivative, relu_derivative, softmax, softmax_derivative, tanh, tanh_derivative
 from scipy import signal, fft
-
+from .loss import mse, mse_derivative, binary_cross_entropy, binary_cross_entropy_derivative, cross_entropy, cross_entropy_derivative
 
 # accepts as batches only, so from flatten send (1, something)
 class Dense:
@@ -342,16 +342,16 @@ class RNNCell:
             self.final_activation = final_activation
         if self.final_activation == sigmoid:
             self.final_activation_derivative = sigmoid_derivative
-        elif self.final_activation_activation == tanh:
+        elif self.final_activation == tanh:
             self.final_activation_derivative = tanh_derivative
-        elif self.final_activation_derivative == relu:
+        elif self.final_activation == relu:
             self.final_activation_derivative = relu_derivative
         elif self.final_activation == softmax:
             self.final_activation_derivative = softmax_derivative
   
             
         
-    def forward_one(self,input, hidden_state = None):
+    def forward_one(self,input, target, hidden_state = None):
         self.input = input
         if hidden_state is None:
             hidden_state = np.zeros((1, self.hidden_size))
@@ -366,7 +366,7 @@ class RNNCell:
         else:    
             activated_output = unactivated_output
             
-        self.history.append((input, hidden_state, unactivated_hidden_state, unactivated_output,activated_output))
+        self.history.append((input, hidden_state, unactivated_hidden_state, unactivated_output,activated_output,new_hidden_state, target))
         return activated_output, new_hidden_state
     
     def forward(self, inputs):
@@ -376,17 +376,26 @@ class RNNCell:
         
         return self.output
 
-    def backward(self, output_grad, lr):
+    def backward(self,lr, loss):
         self.reset_grads()
-        output_grad = output_grad
-        if self.final_activation != None:
-            output_grad = output_grad * self.final_activation_derivative(self.history[-1][3])
-        input, hidden_state, unactivated_hidden_state, unactivated_output, activated_output = self.history[-1]
+        output_grad = np.zeros((1, self.hidden_size))
+        loss = mse
+        loss_deri =mse_derivative
+        if loss == 'binary':
+            loss = softmax
+            loss_deri = softmax_derivative
+        elif loss == 'cross_entropy':
+            loss = cross_entropy
+            loss_deri = cross_entropy_derivative
+        else:
+            raise ValueError("Loss not supported")
         
-        self.hy_grad += np.array([hidden_state]).T @ np.array([output_grad])
-        output_grad = output_grad @ self.weights_hy.T
+        # 
+        # output_grad = output_grad @ self.weights_hy.T
+        tot_loss = 0
         while len(self.history) > 0:
-            output_grad = self.singl_back_prop(output_grad, lr)
+            output_grad,loss_f = self.singl_back_prop(output_grad, loss, loss_deri, lr)
+            tot_loss += loss_f
             self.history.pop()
         
         self.weights_hh -= self.hh_grad * lr
@@ -394,14 +403,18 @@ class RNNCell:
         self.weights_hy -= self.hy_grad * lr
     
         
-    def singl_back_prop(self, output_grad, lr):
-        input, hidden_state, unactivated_hidden_state, unactivated_output, activated_output = self.history[-1]
+    def singl_back_prop(self, output_grad, loss_fn,loss_derivative_fn, lr):
+        input, hidden_state, unactivated_hidden_state, unactivated_output, activated_output,new_hidden, target = self.history[-1]
         output_grad = output_grad
         
-        # used if loss computation needed at all steps
-        # compute loss for every y and all
-        # # hy_grad[i][j] = hidden_state[i] * output_grad[j]
-        # self.hy_grad += np.array([hidden_state]).T @ np.array([output_grad])
+        loss = loss_fn(activated_output, target)
+        output_grad1 = loss_derivative_fn(activated_output, target)
+        if self.final_activation != None:
+            output_grad1 = output_grad1 * self.final_activation_derivative(unactivated_output)
+            
+        self.hy_grad += np.array([new_hidden]).T @ np.array([output_grad1])
+        output_grad += output_grad1 @ self.weights_hy.T
+        
         output_grad  = output_grad * tanh_derivative(unactivated_hidden_state)
         
         # self.xh_grad[i][j] = input[i] * output_grad[j]
@@ -411,7 +424,7 @@ class RNNCell:
         # entire first column  of weights_hh is used to compute hidden_state[0], so we need to backpropagate through all of them
         # so the first column of weights_hh is transposed
         output_grad = output_grad @ self.weights_hh.T
-        return output_grad
+        return output_grad, loss
     
     def reset_grads(self):
         self.hy_grad = np.zeros_like(self.weights_hy)
