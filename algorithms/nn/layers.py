@@ -1,5 +1,5 @@
 import numpy as np
-from .activations import sigmoid, relu, sigmoid_derivative, relu_derivative, softmax, softmax_derivative
+from .activations import sigmoid, relu, sigmoid_derivative, relu_derivative, softmax, softmax_derivative, tanh, tanh_derivative
 from scipy import signal, fft
 
 
@@ -313,3 +313,107 @@ class SoftMax:
 
     def __str__(self):
         return 'SoftMax'
+    
+    
+# when loss computation is only needed at end.
+class RNNCell:
+    def __init__(self, input_size, hidden_size, output_size, final_activation = None):
+        self.input_size = input_size
+        
+        self.output_size = output_size
+        self.hidden_size = hidden_size
+        # weights_xh[i][j] = weight from input i to hidden j
+        self.weights_xh = np.random.randn(input_size, hidden_size)
+        
+        # weights_hh[i][j] = weight from hidden i to hidden j
+        self.weights_hh = np.random.randn(hidden_size, hidden_size)
+        
+        # weights_hy[i][j] = weight from hidden i to output j
+        self.weights_hy = np.random.randn(hidden_size, self.output_size) # output size might be differnt than input
+        self.input = None
+        self.hidden_state = None
+        self.output = None
+        self.hy_grad = np.zeros_like(self.weights_hy)
+        self.hh_grad = np.zeros_like(self.weights_hh)
+        self.xh_grad = np.zeros_like(self.weights_xh)
+        self.history = []
+        
+        if final_activation != None:
+            self.final_activation = final_activation
+        if self.final_activation == sigmoid:
+            self.final_activation_derivative = sigmoid_derivative
+        elif self.final_activation_activation == tanh:
+            self.final_activation_derivative = tanh_derivative
+        elif self.final_activation_derivative == relu:
+            self.final_activation_derivative = relu_derivative
+        elif self.final_activation == softmax:
+            self.final_activation_derivative = softmax_derivative
+  
+            
+        
+    def forward_one(self,input, hidden_state = None):
+        self.input = input
+        if hidden_state is None:
+            hidden_state = np.zeros((1, self.hidden_size))
+        self.hidden_state = hidden_state
+        w1 = input @ self.weights_xh
+        w2 = hidden_state @ self.weights_hh
+        unactivated_hidden_state = w1   + w2
+        new_hidden_state = tanh(unactivated_hidden_state)
+        unactivated_output = new_hidden_state @ self.weights_hy
+        if self.final_activation != None:
+            activated_output = self.final_activation(unactivated_output)
+        else:    
+            activated_output = unactivated_output
+            
+        self.history.append((input, hidden_state, unactivated_hidden_state, unactivated_output,activated_output))
+        return activated_output, new_hidden_state
+    
+    def forward(self, inputs):
+        self.inputs = inputs
+        for i in range(len(inputs)):
+            self.output, self.hidden_state = self.forward_one(inputs[i], self.hidden_state)
+        
+        return self.output
+
+    def backward(self, output_grad, lr):
+        self.reset_grads()
+        output_grad = output_grad
+        if self.final_activation != None:
+            output_grad = output_grad * self.final_activation_derivative(self.history[-1][3])
+        input, hidden_state, unactivated_hidden_state, unactivated_output, activated_output = self.history[-1]
+        
+        self.hy_grad += np.array([hidden_state]).T @ np.array([output_grad])
+        output_grad = output_grad @ self.weights_hy.T
+        while len(self.history) > 0:
+            output_grad = self.singl_back_prop(output_grad, lr)
+            self.history.pop()
+        
+        self.weights_hh -= self.hh_grad * lr
+        self.weights_xh -= self.xh_grad * lr
+        self.weights_hy -= self.hy_grad * lr
+    
+        
+    def singl_back_prop(self, output_grad, lr):
+        input, hidden_state, unactivated_hidden_state, unactivated_output, activated_output = self.history[-1]
+        output_grad = output_grad
+        
+        # used if loss computation needed at all steps
+        # compute loss for every y and all
+        # # hy_grad[i][j] = hidden_state[i] * output_grad[j]
+        # self.hy_grad += np.array([hidden_state]).T @ np.array([output_grad])
+        output_grad  = output_grad * tanh_derivative(unactivated_hidden_state)
+        
+        # self.xh_grad[i][j] = input[i] * output_grad[j]
+        self.xh_grad  += np.array([input]).T @np.array([output_grad])
+        self.hh_grad  += np.array([hidden_state]).T @ np.array([output_grad])
+        
+        # entire first column  of weights_hh is used to compute hidden_state[0], so we need to backpropagate through all of them
+        # so the first column of weights_hh is transposed
+        output_grad = output_grad @ self.weights_hh.T
+        return output_grad
+    
+    def reset_grads(self):
+        self.hy_grad = np.zeros_like(self.weights_hy)
+        self.hh_grad = np.zeros_like(self.weights_hh)
+        self.xh_grad = np.zeros_like(self.weights_xh)

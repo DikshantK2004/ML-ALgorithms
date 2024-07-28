@@ -18,7 +18,7 @@ Notes:
 - **Neural Networks**:- 
   - [Neural Networks notebook](https://cs229.stanford.edu/main_notes.pdf)
   - [3Blue1Brown Neural Networks](http://deeplearning.stanford.edu/tutorial/supervised/SoftmaxRegression/)
-  - [MIT NOtes] (http://introtodeeplearning.com/slides/6S191_MIT_DeepLearning_L1.pdf)
+  - [MIT Notes](http://introtodeeplearning.com/slides/6S191_MIT_DeepLearning_L1.pdf)
 
 - **CNNs**:-
   - [MIT Notes](http://introtodeeplearning.com/slides/6S191_MIT_DeepLearning_L3.pdf): also contain info on difference between classifying and segmentation models.
@@ -27,3 +27,4 @@ Notes:
 
 - **RNNs**:-
   - [MIT Notes](http://introtodeeplearning.com/slides/6S191_MIT_DeepLearning_L2.pdf)
+  - [Note](https://stats.stackexchange.com/questions/345053/rnns-backprop-loss-from-just-the-last-time-step-or-every-single-one)

@@ -20,3 +20,8 @@ def softmax_derivative(x):
     p = softmax(x)
     return p * (1 - p)
 
+def tanh(x):
+    return np.tanh(x)
+
+def tanh_derivative(x):
+    return 1 - np.tanh(x) ** 2
