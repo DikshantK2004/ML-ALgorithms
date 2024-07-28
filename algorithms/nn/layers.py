@@ -352,7 +352,6 @@ class RNNCell:
             
         
     def forward_one(self,input, target, hidden_state = None):
-        self.input = input
         if hidden_state is None:
             hidden_state = np.zeros((1, self.hidden_size))
         self.hidden_state = hidden_state
@@ -369,57 +368,59 @@ class RNNCell:
         self.history.append((input, hidden_state, unactivated_hidden_state, unactivated_output,activated_output,new_hidden_state, target))
         return activated_output, new_hidden_state
     
-    def forward(self, inputs):
+    def forward(self, inputs, targets):
         self.inputs = inputs
         for i in range(len(inputs)):
-            self.output, self.hidden_state = self.forward_one(inputs[i], self.hidden_state)
-        
+            self.output, self.hidden_stafte = self.forward_one(inputs[i],targets[i] ,self.hidden_state)
+            self.output = np.clip(self.output, 1e-10, 1- 1e-10)
         return self.output
 
     def backward(self,lr, loss):
         self.reset_grads()
         output_grad = np.zeros((1, self.hidden_size))
-        loss = mse
-        loss_deri =mse_derivative
+        
         if loss == 'binary':
             loss = softmax
             loss_deri = softmax_derivative
         elif loss == 'cross_entropy':
             loss = cross_entropy
             loss_deri = cross_entropy_derivative
+        elif loss == 'mse':
+            loss = mse
+            loss_deri = mse_derivative
         else:
             raise ValueError("Loss not supported")
         
-        # 
+    
         # output_grad = output_grad @ self.weights_hy.T
         tot_loss = 0
         while len(self.history) > 0:
-            output_grad,loss_f = self.singl_back_prop(output_grad, loss, loss_deri, lr)
+            output_grad,loss_f = self.singl_back_prop(output_grad, loss, loss_deri)
             tot_loss += loss_f
             self.history.pop()
         
-        self.weights_hh -= self.hh_grad * lr
-        self.weights_xh -= self.xh_grad * lr
-        self.weights_hy -= self.hy_grad * lr
-    
+        self.weights_hh += self.hh_grad * lr
+        self.weights_xh += self.xh_grad * lr
+        self.weights_hy += self.hy_grad * lr
+
+        return tot_loss
         
-    def singl_back_prop(self, output_grad, loss_fn,loss_derivative_fn, lr):
+    def singl_back_prop(self, output_grad, loss_fn,loss_derivative_fn):
         input, hidden_state, unactivated_hidden_state, unactivated_output, activated_output,new_hidden, target = self.history[-1]
         output_grad = output_grad
         
-        loss = loss_fn(activated_output, target)
-        output_grad1 = loss_derivative_fn(activated_output, target)
+        loss = loss_fn(target, activated_output)
+        output_grad1 = loss_derivative_fn(target, activated_output)
         if self.final_activation != None:
             output_grad1 = output_grad1 * self.final_activation_derivative(unactivated_output)
-            
-        self.hy_grad += np.array([new_hidden]).T @ np.array([output_grad1])
+        self.hy_grad += new_hidden.T @output_grad1
         output_grad += output_grad1 @ self.weights_hy.T
-        
         output_grad  = output_grad * tanh_derivative(unactivated_hidden_state)
         
         # self.xh_grad[i][j] = input[i] * output_grad[j]
-        self.xh_grad  += np.array([input]).T @np.array([output_grad])
-        self.hh_grad  += np.array([hidden_state]).T @ np.array([output_grad])
+        input = np.array([input])
+        self.xh_grad  += input.T @output_grad
+        self.hh_grad  += hidden_state.T @ output_grad
         
         # entire first column  of weights_hh is used to compute hidden_state[0], so we need to backpropagate through all of them
         # so the first column of weights_hh is transposed
@@ -430,3 +431,5 @@ class RNNCell:
         self.hy_grad = np.zeros_like(self.weights_hy)
         self.hh_grad = np.zeros_like(self.weights_hh)
         self.xh_grad = np.zeros_like(self.weights_xh)
+        
+   
