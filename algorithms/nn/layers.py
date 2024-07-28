@@ -432,4 +432,3 @@ class RNNCell:
         self.hh_grad = np.zeros_like(self.weights_hh)
         self.xh_grad = np.zeros_like(self.weights_xh)
         
-   

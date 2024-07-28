@@ -28,3 +28,8 @@ Notes:
 - **RNNs**:-
   - [MIT Notes](http://introtodeeplearning.com/slides/6S191_MIT_DeepLearning_L2.pdf)
   - [Note](https://stats.stackexchange.com/questions/345053/rnns-backprop-loss-from-just-the-last-time-step-or-every-single-one)
+  - [AIDream](https://www.theaidream.com/post/introduction-to-rnn-and-lstm)
+  - [tORONTO](https://www.cs.toronto.edu/~tingwuwang/rnn_tutorial.pdf)
+  - [Pytorch RNN](https://jaketae.github.io/study/pytorch-rnn/)
+  - [RNN from scratch](https://towardsdatascience.com/implementing-recurrent-neural-network-using-numpy-c359a0a68a67)
+  - [LSTM](https://www.kaggle.com/code/navjindervirdee/lstm-neural-network-from-scratch) - similar to AiDREAM architecture
